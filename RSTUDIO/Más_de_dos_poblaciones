@@ -1,0 +1,70 @@
+
+################################################################################################
+#####################COMPARAR LA MEDIA DE MÁS DE 2 POBLACIONES #################################
+
+# EJEMPLO PARA ANOVA DE 1 FACTOR
+
+# Creamos la variable "medidas" con las mediciones de las diferentes poblaciones (Sevillanas, catalanas y vascas) en una misma cadena
+
+medidas <- c(178.3, 168.1, 174.9, 175.6, 161.9, 178.0, 170.3, 165.2, 171.7, 169.9, 164.9, 174.8, 164.9, 179.0, 168.6, 167.9, 169.0, 170.6, 182.9, 182.3, 178.4, 174.2, 187.1, 177.4, 180.8, 180.5, 171.2, 182.5, 186.1, 167.4)
+
+# Creamos la variable nombres, que almacena las "etiquetas" de cada muestra
+# nombres <- as.factor(c("s", "s", "s", "s", "s", "s", "s", "s", "s", "s", "c", "c", "c", "c", "c", "c", "c", "c", "c", "c", "v", "v", "v", "v", "v", "v", "v", "v", "v", "v"))
+nombres <- as.factor(c(rep("s",10), rep("c",10), rep("v",10))) 
+
+#Unimos ambas variables en un data.frame llamada "datos"
+datos <- data.frame(medidas, nombres)
+
+# Modelizamos: datos ~ nombres_de_las_poblaciones, dataframe de ambos
+modelo <- aov(medidas ~ nombres, datos)
+
+# Hacemos ANOVA del modelo 
+anova(modelo)
+
+# Observamos el Pr(>F):
+  # si es mayor a 0.05: Aceptamos la H0, NO HAY DIFERENCIAS ENTRE POBLACIONES
+  # Si es menor a 0.05: Rechazamos H0, HAY DIFERENCIAS ENTRE ALGUNA DE LAS POBLACIONES
+
+#####VALIDACIÓN DE ANOVA
+
+# Para estar seguros de que ANOVA es válido debemos comprobar dos condiciones: 
+
+# 1. Que siguen una distribución normal: TEST DE SHAPIRO-WILK 
+# 2. Que la varianza es igual en todas las poblaciones: TEST DE BARTLETT
+
+# 1. TEST DE SHAPIRO-WILK: 
+shapiro.test(modelo$residuals)  
+	# si p-value > alfa (0.05/0.01/etc) --> ACEPTAMOS H0: Siguen una distribución normal
+	# si p-value < alfa (0.05/0.01/etc) --> RECHAZAMOS H0: No siguen una distribución normal
+
+# 2. TEST DE BARTLETT
+bartlett.test(medidas, nombres) 
+	# si p-value > alfa (0.05/0.01/etc) --> ACEPTAMOS H0: Las varianzas son iguales
+	# si p-value < alfa (0.05/0.01/etc) --> RECHAZAMOS H0: Las varianzas no son iguales 
+
+##############################################
+
+#Ahora queremos saber cuál o cuales de las poblaciones es la que tiene diferencias 
+#Para ello tenemos 2 test: LSD (se arriesga más) y Scheffé (mas conservadora)
+
+install.packages("agricolae")
+library(agricolae)
+
+##### Test LSD
+LSD.test(modelo, "nombres", console=TRUE)
+
+#Nos centraremos en los resultados de las comparaciones y no tanto en el cálculo de cada estadístico.
+# Como podemos ver, en el apartado "medidas groups", el grupo de mujeres vascas es distinto, 
+# y con una media mayor que el de catalanas y sevillanas (letra a), mientras que catalanas y 
+# sevillanas tienen una nombres que no es significativamente distinta (letra b).
+
+#### Test Scheffé 
+scheffe.test(modelo, "nombres", console=TRUE) 
+
+# Como podemos ver, este contraste de comparaciones múltiples nos dice que todas las poblaciones 
+# no son significativamente distintas (todas tinene la letra a en el "medidas groups"). 
+# Por otro lado, nosotros sabemos que hay alguna población distinta, gracias a la tabla ANOVA. 
+# En este caso, Scheffé es excesivamente conservador y no es capaz de detectar la diferencia 
+# con las mujeres vascas, que el test LSD sí detecta.
+
+# Debemos priorizar siempre el resultado de la tabla ANOVA # 
