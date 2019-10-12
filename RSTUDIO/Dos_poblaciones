@@ -1,0 +1,20 @@
+#############################################################################################
+#####################COMPARAR LA MEDIA DE 2 POBLACIONES #####################################
+#############################################################################################
+
+# Tenemos 2 poblaciones y queremos saber si hay diferencias significativas entre ellas
+# Para ello, vamos a ver si hay diferencias significativas entre sus medias. 
+# Esto se hace con la t de student 
+# H0 : LAS MEDIAS SON IGUALES. NO HAY DIFERENCIAS	
+# H1 : LAS MEDIAS SON DIFERENTES. HAY DIFERENCIAS SIGNIFICATIVAS ENTRE ELLAS 
+
+# si p-value > alfa (0.05/0.01/etc) --> ACEPTAMOS H0
+# si p-value < alfa (0.05/0.01/etc) --> RECHAZAMOS H0. Nos quedamos con H1
+
+# EJEMPLO 
+
+X <- c(175.7, 184.7, 165.9, 176.6, 175.3, 163.9, 171.5, 146.6, 157.0, 185.5)
+Y <- c(177.6, 161.0, 180.6, 176.0, 178.3, 170.7, 170.0, 186.5, 163.0, 161.4)
+t.test(X, Y, conf.level = 0.95, alternative='two.sided', var.equal=TRUE)
+
+# Nos da un p-value = 0.6421 > 0.05 por lo tanto ACEPTAMOS H0: NO hay diferencias entre ambas 
