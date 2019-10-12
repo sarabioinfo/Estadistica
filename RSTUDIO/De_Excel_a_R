@@ -18,3 +18,9 @@ Nombre <- read.csv ("C:/Users/Usuario/Desktop/Nombre_del_archivo.csv", row.names
 
 # Indicar sep="," o sep = ";" 
 # RECORDAR QUE EN R LAS BARRAS SON / Y NO \
+
+# Para guardar los datos de R en un archivo .csv y luego poder abrirlo con excel:
+
+write.csv ( Nombre_datos_en_R, file="Nombre_que_queremos_ponerle.csv")
+
+# Se guardará en el directorio 
