@@ -1,0 +1,20 @@
+##### Para pasar datos de una tabla de excel a R debemos hacer lo siguiente: 
+
+	# Guardamos el excel en formato .csv 
+	# Abrimos el .csv en el bloc de notas y eliminamos las , que haya de más 
+	# Podemos dejar las separaciones en ; y en el comando de R tendremos que indicar sep = ";"
+	# Podemos dejar las separaciones en , y en el comando de R tendremos que indicar sep = "," 
+
+
+##### Si tenemos los decimales indicados por . y queremos indicarlos por , pero las columnas están separadas por ,: 
+	
+	# Reemplazar las , por ; 
+	# Reemplazar los . por , 
+	# Indicar en R sep = ";" 
+
+# ABRIR R:
+
+Nombre <- read.csv ("C:/Users/Usuario/Desktop/Nombre_del_archivo.csv", row.names=1, sep=",")  
+
+# Indicar sep="," o sep = ";" 
+# RECORDAR QUE EN R LAS BARRAS SON / Y NO \
