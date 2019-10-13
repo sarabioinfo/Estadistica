@@ -1,0 +1,14 @@
+library(gplots)
+library(RColorBrewer)
+
+
+my_paletteHM <- colorRampPalette(c("white", "blue", "darkgreen", "green", "yellow", "orange", "red", "pink", "violet", "black"))(n = 9)
+
+
+pdf("Nuevo_nombre.pdf", height=10, width=30)
+
+heatmap.2(mat_dataHMt,main= "Granada_2019_Opcion_1", notecol="black", density.info="none", trace="none", margins=c(12,14), 
+
+col= my_paletteHM, breaks= col_breaksHM ,Rowv= as.dendrogram(row_clusterHM), Colv= as.dendrogram(col_clusterHM), lmat=NULL)
+
+dev.off()
