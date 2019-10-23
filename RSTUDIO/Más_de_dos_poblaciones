@@ -1,6 +1,6 @@
-
 ################################################################################################
 #####################COMPARAR LA MEDIA DE MÁS DE 2 POBLACIONES #################################
+################################################################################################
 
 # EJEMPLO PARA ANOVA DE 1 FACTOR
 
@@ -12,7 +12,7 @@ medidas <- c(178.3, 168.1, 174.9, 175.6, 161.9, 178.0, 170.3, 165.2, 171.7, 169.
 # nombres <- as.factor(c("s", "s", "s", "s", "s", "s", "s", "s", "s", "s", "c", "c", "c", "c", "c", "c", "c", "c", "c", "c", "v", "v", "v", "v", "v", "v", "v", "v", "v", "v"))
 nombres <- as.factor(c(rep("s",10), rep("c",10), rep("v",10))) 
 
-#Unimos ambas variables en un data.frame llamada "datos"
+# Unimos ambas variables en un data.frame llamada "datos"
 datos <- data.frame(medidas, nombres)
 
 # Modelizamos: datos ~ nombres_de_las_poblaciones, dataframe de ambos
@@ -43,9 +43,10 @@ bartlett.test(medidas, nombres)
 	# si p-value < alfa (0.05/0.01/etc) --> RECHAZAMOS H0: Las varianzas no son iguales 
 
 ##############################################
+# COMPARACIONES MÚTLIPLES  
 
-#Ahora queremos saber cuál o cuales de las poblaciones es la que tiene diferencias 
-#Para ello tenemos 2 test: LSD (se arriesga más) y Scheffé (mas conservadora)
+# Ahora queremos saber cuál o cuales de las poblaciones es la que tiene diferencias 
+# Para ello tenemos 2 test: LSD (se arriesga más) y Scheffé (mas conservadora)
 
 install.packages("agricolae")
 library(agricolae)
@@ -68,3 +69,184 @@ scheffe.test(modelo, "nombres", console=TRUE)
 # con las mujeres vascas, que el test LSD sí detecta.
 
 # Debemos priorizar siempre el resultado de la tabla ANOVA # 
+
+
+###############################################################################################
+########################### ANOVA EN DISEÑOS CRUZADOS #########################################
+###############################################################################################
+##_____________________________ EJEMPLO 2 FACTORES FIJOS ____________________________________##
+
+# Introducimos los datos 
+
+colesterol = c(70.3, 72.0, 71.1, 74.5, 76.1, 75.9, 68.9, 69.3, 67.9, 71.4, 68.7, 70.3)
+
+# El primer factor (expresión del gen):
+expresion = c("baja", "baja", "baja", "alta", "alta", "alta", "baja", "baja", "baja", "alta", "alta", "alta")
+
+#y el segundo factor (dieta):
+dieta = c("rica", "rica", "rica", "rica", "rica", "rica", "pobre", "pobre", "pobre", "pobre", "pobre", "pobre")
+
+# Ahora los juntamos en un data.frame:
+datos = data.frame(colesterol, expresion, dieta)
+
+#y construimos y analizamos el modelo:
+modelo = aov(colesterol ~ expresion + dieta + expresion:dieta, datos)
+anova(modelo)
+
+# Al igual que con ANOVA de 1 factor debemos validar: 
+
+######### VALIDACIÓN DE ANOVA
+
+		# Para estar seguros de que ANOVA es válido debemos comprobar dos condiciones: 
+
+		# 1. Que siguen una distribución normal: TEST DE SHAPIRO-WILK 
+		# 2. Que la varianza es igual en todas las poblaciones(homoscedasticidad de las varianzas): TEST DE BARTLETT
+
+		# 1. TEST DE SHAPIRO-WILK: 
+			shapiro.test(modelo$residuals)  
+			# si p-value > alfa (0.05/0.01/etc) --> ACEPTAMOS H0: Siguen una distribución normal
+			# si p-value < alfa (0.05/0.01/etc) --> RECHAZAMOS H0: No siguen una distribución normal
+
+		# 2. TEST DE BARTLETT
+			# En este caso es necesario indicarle todas las posibles condiciones experimentales. Esto lo resolvemos con la función split:
+			bartlett.test(split(colesterol,list(expresion,dieta)))
+			# si p-value > alfa (0.05/0.01/etc) --> ACEPTAMOS H0: Las varianzas son iguales
+			# si p-value < alfa (0.05/0.01/etc) --> RECHAZAMOS H0: Las varianzas no son iguales 
+
+##############################################
+
+# Tras validar ANOVA, sacamos conlcusiones: 
+
+# Sacamos conclusiones de dos columnas: 
+	# 1. Comparando cada F value con F tablas 
+	# 2. Que Pr(>F) sea > o < que 0.05 
+
+	# En este ejemplo F value > F tablas y Pr(>F) < 0.05 por lo tanto podemos concluir que: 
+	# - Hay diferencias significativas en el nivel de colesterol debidas al nivel de expresion
+	# 	del gen estudiado
+	# - Hay diferencias significativas debida a la dieta del sujeto 
+	# - Los dos efectos no son independientes: hay una interaccion significativa entre ellos. 
+
+# COMPARACIONES MÚLTIPLES: No es necesario si aceptamos que hay diferencias 
+# Ahora necesitamos ordenar las medias de cada grupo para saber en qué dirección van esas diferencias. 
+# Para obtener la tabla de medias ejecutamos:
+
+model.tables(modelo, type="means") 
+
+# Con los resultados obtenidos de ANOVA podemos concluir que hay diferencias significativas entre las medias 
+
+################################################################################3
+
+############## GRÁFICOS 
+
+# Para estudiar la interacción lo mejor es representarlo gráficamente: 
+# Representamos las medias de cada grupo con respecto al colesterol:
+
+interaction.plot(datos$expresion, datos$dieta, datos$colesterol) 
+# En este gráfico visualizamos como se comporta la dieta (cada linea es un tipo) con respecto de la expresión. 
+# Cuando hay una expresion alta del gen, hay mucha diferencia en el nivel de colesterol entre dietas ricas y pobres 
+# Cuando hay una expresion baja del gen, la diferencia es menor
+
+# CONCLUSIÓN: El gen tiene poca influencia en el colesterol cuando la dieta es baja en grasas, pero cuando la dieta 
+# 			  es rica en grasas, niveles altos de expresión del gen, potencian mucho la presencia de colesterol. 
+
+# CONCLUSION FINAL: El gen debe estar implicado en la regulacion del nivel del colesterol, pero su efecto es más potente 
+# 					cuando la dieta es rica en grasas. 
+
+# OTRA MANERA DE REPRESENTAR EL GRÁFICO: Ahora las líneas representadas corresponden a los datos de expresión del gen 
+
+interaction.plot(datos$dieta, datos$expresion, datos$colesterol) 
+
+
+###############################################################################################
+########################### ANOVA EN DISEÑOS CRUZADOS #########################################
+###############################################################################################
+##_________________________ EJEMPLO 2 FACTORES ALEATORIOS ___________________________________##
+
+# Libreria necesaria 
+
+install.packages("mixlm")
+library(mixlm)
+
+# Introducción de los datos y creación del data frame 
+
+calidad = c(86, 85, 80, 93, 85, 84, 85, 92, 79, 94, 96, 98, 89, 90, 90, 88, 86, 95, 73, 82, 81, 88, 88, 70, 77, 80, 76)
+experto = as.factor(c("E1", "E1", "E1", "E1", "E1", "E1", "E1", "E1", "E1", "E2", "E2", "E2", "E2", "E2", "E2", "E2", "E2", "E2", "E3", "E3", "E3", "E3", "E3", "E3", "E3", "E3", "E3"))
+producto = as.factor(c("P1", "P1", "P1", "P2", "P2", "P2", "P3", "P3", "P3", "P1", "P1", "P1", "P2", "P2", "P2", "P3", "P3", "P3", "P1", "P1", "P1", "P2", "P2", "P2", "P3", "P3", "P3"))
+datos = data.frame(calidad, experto, producto)
+
+# Ahora llamaremos a la función "lm" (función linear model modificada por la libreria mixlm) y le indicaremos, 
+# como variable dependiente, la variable calidad, mediante el símbolo "~". 
+# Ahora especificamos cada factor del que depende la variable respuesta uniendolos todos con el símbolo "+". 
+# Si el factor es aleatorio, lo escribimos como r(<FACTOR>) para indicarlo, si es fijo, lo escribimos sin r y sin paréntesis. 
+# Las interacciones se indican con el símbolo ":"
+
+modelo = lm(calidad ~ r(experto) + r(producto) + r(experto):r(producto), unrestricted=FALSE) 
+
+# Función lm (linear model) 
+# Variable dependiente: calidad 
+# ~ +cada factor del que depente la variable respuesta 
+# 		Si el factor es aleatorio: r(<FACTOR>) 
+# 		Si el factor es fijo: sin r y sin parentesis: <FACTOR> 
+# Las interacciones se indican con :  r(experto):r(producto)
+# "unrestricted=FALSE" se refiere a un tema técnico bastante complejo que afecta a las interacciones.
+# Muchos programas comerciales utilizan modelos restricted, por lo que forzaremos esta opción para obtener resultados equivalentes
+
+
+# Visualizar la tabla ANOVA correspondiente (
+# La opción type="III" se refiere al tipo de sumas de cuadrados, otro tema técnico muy poco interesante 
+
+Anova(modelo, type="III")
+
+# A partir de la tabla ANOVA observaremos la columna de p-valor: Pr(>F)
+# 	Si Pr(>F) > 0.05 : Aceptamos H0, no tenemos motivos para pensar que ese factor introduce variabilidad significativa en el modelo
+#	Si Pr(>F) < 0.05 : Aceptamos H1, y afirmamos que ese factor introduce variabilidad en el modelo de forma significativa 
+
+###############################################################################################
+########################### ANOVA EN DISEÑOS CRUZADOS #########################################
+###############################################################################################
+
+##_________________ EJEMPLO FACTORES MIXTOS: 1 FIJO Y 1 ALEATORIO____________________________##
+
+# Tenemos 1 factor fijo y 1 factor aleatorio 
+# En este caso, el factor fijo son los 2 algoritmos: SG y BG
+# y el factor aleatorio son 3 transcriptomas: T1, T2 y T3
+# y queremos asber cual de los 2 algoritmos analiza mejor los transcriptomas
+
+# Introducimos los datos 
+similitud = c(92, 91, 96, 94, 88, 93, 82, 71, 78, 87, 92, 93, 89, 87, 84, 91, 88, 93)
+algoritmo = as.factor(c("SG", "SG", "SG", "BG", "BG", "BG", "SG", "SG", "SG", "BG", "BG", "BG", "SG", "SG", "SG", "BG", "BG", "BG"))
+transcriptoma = as.factor(c("T1", "T1", "T1", "T1", "T1", "T1", "T2", "T2", "T2", "T2", "T2", "T2", "T3", "T3", "T3", "T3", "T3", "T3"))
+# pasamos a data.frame 
+datos = data.frame(similitud, algoritmo, transcriptoma) 
+
+# Utilizaremos la libreria mixlm
+install.packages("mixlm")
+library(mixlm)
+
+# modelizamos 
+modelo = lm(similitud ~ algoritmo + r(transcriptoma) + algoritmo:r(transcriptoma), unrestricted=FALSE) 
+
+# al igual que antes:
+
+# Función lm (linear model) 
+# Variable dependiente: calidad 
+# ~ +cada factor del que depente la variable respuesta 
+# 		Si el factor es aleatorio: r(<FACTOR>) 
+# 		Si el factor es fijo: sin r y sin parentesis: <FACTOR> 
+# Las interacciones se indican con :  r(experto):r(producto)
+# "unrestricted=FALSE" se refiere a un tema técnico bastante complejo que afecta a las interacciones.
+# Muchos programas comerciales utilizan modelos restricted, por lo que forzaremos esta opción para obtener resultados equivalentes
+
+Anova(modelo, type="III") 
+
+# Factor 1 (Algoritmo): 
+# 		Si p-value > 0.05: Aceptamos H0, no introduce variaciones = los algoritmos funcionan de forma parecida 
+#		Si p-value < 0.05: Aceptamos H1, el factor algoritmo introduc variabilidad significativa en el modelo 
+# Factor 2 (Transcriptoma): 
+# 		Si p-value > 0.05: Aceptamos H0, no introducen variaciones 
+#		Si p-value < 0.05: Aceptamos H1, el factor transcriptoma introduc variabilidad significativa en el modelo
+# Factor interacción (algoritmo:transcriptoma): 
+# 		Si p-value > 0.05: Aceptamos H0, no introducen variaciones 
+#		Si p-value < 0.05: Aceptamos H1, la interacción introduc variabilidad significativa en el modelo
+
